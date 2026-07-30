@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controlador · Aero Rancho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16211f;
+    --paper:#f6f4ee;
+    --panel:#ffffff;
+    --line:#dcd6c8;
+    --muted:#6b6f68;
+    --pine:#1f4d43;
+    --pine-light:#2f6c5d;
+
+    --risco-azul:#3b76c9;      --risco-azul-bg:#e9f0fb;
+    --risco-verde:#3f8f52;     --risco-verde-bg:#eaf6ec;
+    --risco-amarelo:#a6790c;   --risco-amarelo-bg:#fbf1d9;
+    --risco-laranja:#c1590f;   --risco-laranja-bg:#fcece0;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:28px 18px 64px;
+  }
+  .wrap{max-width:1240px;margin:0 auto;}
+
+  /* ---- header ---- */
+  header.app-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:20px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:16px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--pine); font-weight:600; margin:0 0 6px;
+  }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:27px; margin:0; letter-spacing:-.01em;}
+
+  .head-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .action-btn{
+    font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;
+    padding:9px 16px; border-radius:7px; border:1.5px solid var(--line);
+    background:#fff; color:var(--ink);
+  }
+  .action-btn:hover{ border-color:var(--pine); color:var(--pine); background:#f2f6f4; }
+  .action-btn.danger{ color:#b3261e; border-color:#f0cfc9; }
+  .action-btn.danger:hover{ border-color:#b3261e; background:#fbe9e7; }
+
+  .meta-bar{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 20px;
+    margin-bottom:24px;
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:700px){ .meta-bar{grid-template-columns:1fr;} }
+
+  label{
+    font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--muted); display:block; margin-bottom:6px;
+  }
+  input[type=text], input[type=date]{
+    width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:7px;
+    font-family:inherit; font-size:14px; background:#fff; color:var(--ink);
+  }
+  input[type=text]:focus, input[type=date]:focus{
+    outline:none; border-color:var(--pine); box-shadow:0 0 0 3px rgba(31,77,67,.12);
+  }
+
+  .period-options{ display:flex; gap:6px; }
+  .period-chip{ position:relative; flex:1; }
+  .period-chip input{ position:absolute; opacity:0; width:100%; height:100%; cursor:pointer; margin:0; left:0; top:0; }
+  .period-chip span{
+    display:flex; align-items:center; justify-content:center;
+    padding:9px 6px; border-radius:7px; border:1.5px solid var(--line);
+    font-size:12.5px; font-weight:600; cursor:pointer; background:#fff; color:var(--muted);
+  }
+  .period-chip input:checked ~ span{ border-color:var(--pine); background:#eaf1ee; color:var(--pine); }
+
+  /* ---- rooms grid ---- */
+  .rooms-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:18px;
+    margin-bottom:26px;
+  }
+  @media (max-width:900px){ .rooms-grid{grid-template-columns:1fr;} }
+
+  .room-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .room-head{
+    padding:14px 18px;
+    background:var(--ink);
+    color:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .room-head h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px; margin:0; letter-spacing:.01em;
+  }
+  .doctor-field{ flex:1; min-width:180px; max-width:280px; }
+  .doctor-field label{ color:#cfd6d0; margin-bottom:4px; font-size:10px; }
+  .doctor-field input{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
+    color:#fff;
+    font-size:13px;
+    padding:7px 10px;
+  }
+  .doctor-field input::placeholder{ color:#98a29c; }
+  .doctor-field input:focus{ outline:none; border-color:#fff; box-shadow:none; background:rgba(255,255,255,.14); }
+
+  .room-body{ padding:14px 18px 16px; flex:1; display:flex; flex-direction:column; }
+
+  table.grid-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.grid-table thead th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); font-weight:600; padding:6px 6px; border-bottom:1px solid var(--line);
+  }
+  table.grid-table thead th.num-col{ width:28px; }
+  table.grid-table thead th.risk-col{ width:190px; }
+  table.grid-table thead th.del-col{ width:28px; }
+  table.grid-table tbody td{ padding:6px 6px; border-bottom:1px solid #ede9db; vertical-align:middle; }
+  table.grid-table tbody tr:last-child td{ border-bottom:none; }
+  table.grid-table tbody td.idx{ color:var(--muted); font-variant-numeric:tabular-nums; font-size:12.5px; }
+
+  .patient-input{
+    width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:6px;
+    font-family:inherit; font-size:13px; background:#fff; color:var(--ink);
+  }
+  .patient-input:focus{ outline:none; border-color:var(--pine); box-shadow:0 0 0 2px rgba(31,77,67,.1); }
+
+  .risk-mini-options{ display:flex; gap:4px; flex-wrap:nowrap; }
+  .risk-mini{ position:relative; }
+  .risk-mini input{ position:absolute; opacity:0; width:100%; height:100%; cursor:pointer; margin:0; left:0; top:0; }
+  .risk-mini span{
+    display:flex; align-items:center; justify-content:center;
+    width:30px; height:26px; border-radius:6px; border:1.5px solid var(--line);
+    cursor:pointer; font-size:0;
+  }
+  .risk-mini span::after{ content:""; width:8px; height:8px; border-radius:50%; display:block; }
+  .risk-mini[data-r="Azul"] span::after{ background:var(--risco-azul); opacity:.35; }
+  .risk-mini[data-r="Verde"] span::after{ background:var(--risco-verde); opacity:.35; }
+  .risk-mini[data-r="Amarelo"] span::after{ background:var(--risco-amarelo); opacity:.35; }
+  .risk-mini[data-r="Laranja"] span::after{ background:var(--risco-laranja); opacity:.35; }
+  .risk-mini[data-r="Azul"] input:checked ~ span{ border-color:var(--risco-azul); background:var(--risco-azul-bg); }
+  .risk-mini[data-r="Azul"] input:checked ~ span::after{ opacity:1; }
+  .risk-mini[data-r="Verde"] input:checked ~ span{ border-color:var(--risco-verde); background:var(--risco-verde-bg); }
+  .risk-mini[data-r="Verde"] input:checked ~ span::after{ opacity:1; }
+  .risk-mini[data-r="Amarelo"] input:checked ~ span{ border-color:var(--risco-amarelo); background:var(--risco-amarelo-bg); }
+  .risk-mini[data-r="Amarelo"] input:checked ~ span::after{ opacity:1; }
+  .risk-mini[data-r="Laranja"] input:checked ~ span{ border-color:var(--risco-laranja); background:var(--risco-laranja-bg); }
+  .risk-mini[data-r="Laranja"] input:checked ~ span::after{ opacity:1; }
+
+  .del-row-btn{
+    border:none; background:none; color:var(--muted); cursor:pointer;
+    font-size:15px; line-height:1; padding:4px; border-radius:5px;
+  }
+  .del-row-btn:hover{ color:#b3261e; background:#fbe9e7; }
+
+  .add-patient-btn{
+    margin-top:10px;
+    align-self:flex-start;
+    background:none;
+    border:1.5px dashed var(--line);
+    color:var(--pine);
+    font-family:inherit;
+    font-weight:600;
+    font-size:12.5px;
+    padding:8px 14px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .add-patient-btn:hover{ border-color:var(--pine); background:#f2f6f4; }
+
+  .room-empty{
+    padding:18px 6px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+  }
+
+  .room-foot{
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .mini-total{
+    display:flex; align-items:center; gap:6px;
+    font-size:11.5px; font-weight:600; color:var(--muted);
+    padding:4px 9px; border-radius:20px; background:#faf9f4;
+    font-variant-numeric:tabular-nums;
+  }
+  .mini-total .dot{ width:7px; height:7px; border-radius:50%; }
+  .mini-total.Azul .dot{ background:var(--risco-azul); } .mini-total.Azul{ color:var(--risco-azul); background:var(--risco-azul-bg); }
+  .mini-total.Verde .dot{ background:var(--risco-verde); } .mini-total.Verde{ color:var(--risco-verde); background:var(--risco-verde-bg); }
+  .mini-total.Amarelo .dot{ background:var(--risco-amarelo); } .mini-total.Amarelo{ color:var(--risco-amarelo); background:var(--risco-amarelo-bg); }
+  .mini-total.Laranja .dot{ background:var(--risco-laranja); } .mini-total.Laranja{ color:var(--risco-laranja); background:var(--risco-laranja-bg); }
+  .mini-total.geral{ color:var(--ink); background:#eee9d8; margin-left:auto; }
+
+  /* ---- summary ---- */
+  .panel-flat{ background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .totals-head{ padding:18px 22px 4px; }
+  .totals-head h2{ font-family:'Space Grotesk',sans-serif; font-size:15px; margin:0 0 3px; }
+  .totals-head p{ margin:0 0 14px; font-size:12.5px; color:var(--muted); }
+
+  table.pivot{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.pivot thead th{
+    background:var(--ink); color:var(--paper); text-align:left; font-size:11px;
+    text-transform:uppercase; letter-spacing:.05em; font-weight:600; padding:10px 22px;
+  }
+  table.pivot thead th.risk-col-Azul{ color:#bcd7ff; }
+  table.pivot thead th.risk-col-Verde{ color:#c4ecc9; }
+  table.pivot thead th.risk-col-Amarelo{ color:#f3dfa3; }
+  table.pivot thead th.risk-col-Laranja{ color:#f6cba9; }
+  table.pivot tbody td{ padding:10px 22px; border-bottom:1px solid #ede9db; }
+  table.pivot tbody tr:last-child td{ border-bottom:none; }
+  table.pivot tbody td.num{ font-variant-numeric:tabular-nums; font-weight:600; text-align:center; }
+  table.pivot tbody td.room-name{ font-weight:600; }
+  table.pivot tbody td.doctor-sub{ display:block; font-weight:400; font-size:11.5px; color:var(--muted); margin-top:2px; }
+  table.pivot tbody td.total-col{ background:#f0efe6; font-weight:700; text-align:center; }
+  table.pivot tfoot td{
+    padding:12px 22px; font-weight:700; border-top:2px solid var(--ink);
+    background:#faf9f4; font-variant-numeric:tabular-nums;
+  }
+  table.pivot tfoot td.total-col{ background:#e6e4d8; text-align:center; }
+  table.pivot tfoot td.num{ text-align:center; }
+
+  footer.note{ text-align:center; font-size:11.5px; color:var(--muted); margin-top:20px; }
+
+  /* ---- print ---- */
+  @media print{
+    body{ background:#fff; padding:0; }
+    .head-actions, .add-patient-btn, .del-row-btn, footer.note{ display:none !important; }
+    .rooms-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+    .room-card{ break-inside:avoid; border-color:#999; }
+    .room-head{ background:#eee !important; color:#111 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; }
+    .panel-flat, .meta-bar{ break-inside:avoid; }
+    table.pivot thead th{ background:#eee !important; color:#111 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .risk-mini-options{ gap:2px; }
+    .risk-mini span{ width:22px; height:20px; border-color:#bbb; }
+    a[href]:after{ content:""; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-head">
+    <div>
+      <p class="eyebrow">CRS · Aero Rancho</p>
+      <h1>Controlador de Atendimento</h1>
+    </div>
+    <div class="head-actions">
+      <button class="action-btn" id="printBtn" type="button">Imprimir</button>
+      <button class="action-btn danger" id="clearBtn" type="button">Limpar tudo</button>
+      <div id="saveHint" style="font-size:12px;color:var(--muted);">Carregando dados salvos…</div>
+    </div>
+  </header>
+
+  <section class="meta-bar">
+    <div>
+      <label for="controladorInput">Controlador</label>
+      <input type="text" id="controladorInput" placeholder="Nome de quem está controlando" autocomplete="off">
+    </div>
+    <div>
+      <label>Período</label>
+      <div class="period-options">
+        <label class="period-chip"><input type="radio" name="periodo" value="Matutino"><span>Matutino</span></label>
+        <label class="period-chip"><input type="radio" name="periodo" value="Vespertino"><span>Vespertino</span></label>
+        <label class="period-chip"><input type="radio" name="periodo" value="Noturno"><span>Noturno</span></label>
+      </div>
+    </div>
+    <div>
+      <label for="dataInput">Data</label>
+      <input type="date" id="dataInput">
+    </div>
+  </section>
+
+  <div class="rooms-grid" id="roomsGrid"></div>
+
+  <section class="panel-flat">
+    <div class="totals-head">
+      <h2>Totalização geral</h2>
+      <p>Atendimentos por consultório e classificação de risco, com total geral do período.</p>
+    </div>
+    <div id="pivotHost"></div>
+  </section>
+
+  <footer class="note">Os dados ficam salvos automaticamente neste navegador.</footer>
+</div>
+
+<datalist id="doctorList"></datalist>
+
+<script>
+(function(){
+  const RISKS = ["Azul","Verde","Amarelo","Laranja"];
+  const ROOM_COUNT = 5;
+  const STORAGE_KEY = "crs_aero_rancho_state";
+
+  const DOCTORS = ["ABDEL HAFES","ALAN LUIS","ALEXANDRE ABREU","ALTINO NETO","AMANDA NEVES DE SOUZA","ANA CLARA FERREIRA","ANA CLAUDIA MELLO","ANA LAURA","ANALISE PAULA CONCEIÇÃO","ANIVALDO LUIS LEMES JUNIOR","ANTONIO ALMEIDA","ANTONIO CARLOS ROSA","ARIANE BORGES","BARBARA NAGANO","BEATRICE RAMOS","BEATRIZ BOIAGO","BIANCA DE SOUZA","BRUNO NOGUEIRA","CAMILA BORGES","CAMILA CRISTINA","CARIELI ALDANA","CARLA CEJANA","CARLOS MARTINS","CAROLINE BAZZANO","CAROLINE DARC","CLAUDIA QUADROS","COSMO ROCHA","CYRIACO RONDON","DANIEL GOMES DE ARAUJO","DANIEL PALOMARES","DANIELLE BARRANCO","DANIELLY LARISSA","DARIO SEBASTIAN MACIAS","DEBORA CURY GUTIERRES","DEBORA ROSSATO","DILSON MAURER","DOUGLAS MARQUES ZARATINI","EDMUNDO GARCIA","FABIANA COUTINHO","FELIPE IANDOLI","FERNANDA FERREIRA","FERNANDA NUNES","FERNANDO DE OLIVEIRA","FLAVIA MARQUES","FRANCIELLE CAROLINE","FRANCISCO CUBEL","GABRIEL BELFORT","GABRIEL YAMAKI","GABRIELA ANDRADE","GABRIELA HONORIO","GESSICA DE MACEDO","GILSON YUDI","GIOVANI JOAO","GIOVANNA LARSEN","GIOVANNI BOUCHABKI","HELOISA AMORIM","IGOR WANDERLEY","ISADORA BORGES DE BRITO","ISADORA LIMA","ISADORA MACEROU","JAMAL SALEM","JAN MIYASATO","JANAINA ROCHA","JÉSSICA ANDRADE","JESSICA FIGUEIRAS","JHENIFFER DE SOUZA","JOANA SARTORE PAGLIOSA","JOAO ROSA","JONAS MOENTKE","JORGE XAVIER MARTINS NETO","JOSÉ GUILHERME","JULIA CHROMINSKI","JULIANO DA SILVA SILVEIRA","JULIANO GOMES","JULIANO NETO","KELLY FURTADO","KELLY SCHNEIDER","KENIO OKAMURA","KESIA LACERDA","LARISSA BOAVENTURA","LENO VIANA","LETICIA TRAD","LUANA ARAUJO BREZOLIN","LUANA VARELA","LUANAYRA SILVA","LUCIA AREJANO","LUCIANA VIEIRA SA","LUIS  FELIPE","LUIS ANTONIO JR","MARCIO BOMFIM","MARCOS RONDON","MARIA","MARIA LETICIA","MARIANA PERES","MARINA MEDEIROS","MATEUS OLIVEIRA","MATHEUS EMBOAVA","MAYCON WAGATUMA","NATHALIA FERNANDES","PATRICIA PAMPURI","PAULO HENRIQUE BERGO","PEDRO BALDOMAR","PERIBIANO GODOI NETO","PRISCILA PASSOS","RAABE DE OLIVEIRA SANTANA FRANÇA","RAFAEL AYALA","RAFAEL ROCHA MILANI","RAFAELI CARDOSO","RAISSA ANDRADE","RAPHAEL NUNES","RAPHAEL SIMIOLI","RAUL BORGES","RAUL MEJIA","RAUL MOREIRA","RAYHANNE VICTORIA COSTA","REINALDO OSHIRO","RENATA BOABAID","RODRIGO FELICIANO","RODRIGO MUNARO","ROGERIO CAVALCANTE","ROGÉRIO GONÇALVES","Rogerio Jose Goncalves","RONIE VELOSO","ROSY DELGADILLO","ROSY E. D. MONTENEGRO","SARA KAISER","SOFIA TEIXEIRA GOMES","STEFERSSON VASQUE","TALYS EDUARDO","VICTOR MAURICIO PEREZ ROJAS","VICTOR YUKIO","VICTORIA TESTON","VINICIUS AKIO KOGA","VINICIUS INACIO UJACOV","VITOR MOREIRA","VIVIANE MORAES","WALTER VINICIUS","WILLIAM ASATO","YASMIN MONTEIRO"];
+
+  const doctorList = document.getElementById('doctorList');
+  doctorList.innerHTML = DOCTORS.map(d => `<option value="${d}"></option>`).join('');
+
+  const roomsGrid = document.getElementById('roomsGrid');
+  const pivotHost = document.getElementById('pivotHost');
+  const controladorInput = document.getElementById('controladorInput');
+  const dataInput = document.getElementById('dataInput');
+  const saveHint = document.getElementById('saveHint');
+
+  let state = {
+    controlador: "",
+    periodo: "",
+    data: "",
+    rooms: Array.from({length: ROOM_COUNT}, (_, i) => ({
+      name: "Consultório " + String(i+1).padStart(2,'0'),
+      doctor: "",
+      patients: []
+    }))
+  };
+
+  let saveTimer = null;
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : str;
+    return d.innerHTML;
+  }
+  function escapeAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        const loaded = JSON.parse(res.value);
+        if(loaded && Array.isArray(loaded.rooms) && loaded.rooms.length === ROOM_COUNT){
+          state = loaded;
+        }
+      }
+    }catch(e){ /* nothing saved yet */ }
+
+    if(!state.data){
+      const now = new Date();
+      state.data = now.toISOString().slice(0,10);
+    }
+
+    controladorInput.value = state.controlador || "";
+    dataInput.value = state.data || "";
+    if(state.periodo){
+      const r = document.querySelector(`input[name="periodo"][value="${state.periodo}"]`);
+      if(r) r.checked = true;
+    }
+
+    renderRooms();
+    renderPivot();
+    saveHint.textContent = "Dados salvos automaticamente neste navegador.";
+  }
+
+  function queueSave(){
+    saveHint.textContent = "Salvando…";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try{
+        await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+        saveHint.textContent = "Tudo salvo.";
+      }catch(e){
+        saveHint.textContent = "Não foi possível salvar agora.";
+      }
+    }, 250);
+  }
+
+  controladorInput.addEventListener('input', () => {
+    state.controlador = controladorInput.value;
+    queueSave();
+  });
+  dataInput.addEventListener('change', () => {
+    state.data = dataInput.value;
+    queueSave();
+  });
+  document.querySelectorAll('input[name="periodo"]').forEach(r => {
+    r.addEventListener('change', () => {
+      state.periodo = r.value;
+      queueSave();
+    });
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if(!confirm("Isso vai apagar o controlador, período, data e todos os pacientes lançados nas 5 salas. Deseja continuar?")) return;
+
+    state = {
+      controlador: "",
+      periodo: "",
+      data: new Date().toISOString().slice(0,10),
+      rooms: Array.from({length: ROOM_COUNT}, (_, i) => ({
+        name: "Consultório " + String(i+1).padStart(2,'0'),
+        doctor: "",
+        patients: []
+      }))
+    };
+
+    controladorInput.value = "";
+    dataInput.value = state.data;
+    document.querySelectorAll('input[name="periodo"]').forEach(r => r.checked = false);
+
+    renderRooms();
+    renderPivot();
+    queueSave();
+  });
+
+  function countRoom(room){
+    const counts = {Azul:0, Verde:0, Amarelo:0, Laranja:0};
+    room.patients.forEach(p => { if(p.risk && counts.hasOwnProperty(p.risk)) counts[p.risk]++; });
+    return counts;
+  }
+
+  function riskMiniOptions(roomIdx, patientId, current){
+    return RISKS.map(r => `
+      <label class="risk-mini" data-r="${r}" title="${r}">
+        <input type="radio" name="risk-${roomIdx}-${patientId}" value="${r}" ${current===r?'checked':''}
+          onchange="window.__setRisk(${roomIdx}, ${patientId}, '${r}')">
+        <span></span>
+      </label>
+    `).join('');
+  }
+
+  function renderRoomCard(room, roomIdx){
+    const rows = room.patients.map((p, i) => `
+      <tr>
+        <td class="idx">${i+1}</td>
+        <td>
+          <input type="text" class="patient-input" placeholder="Nome do paciente" value="${escapeAttr(p.name)}"
+            oninput="window.__setPatientName(${roomIdx}, ${p.id}, this.value)">
+        </td>
+        <td><div class="risk-mini-options">${riskMiniOptions(roomIdx, p.id, p.risk)}</div></td>
+        <td><button class="del-row-btn" title="Remover" onclick="window.__removePatient(${roomIdx}, ${p.id})">×</button></td>
+      </tr>
+    `).join('');
+
+    const counts = countRoom(room);
+    const total = counts.Azul + counts.Verde + counts.Amarelo + counts.Laranja;
+
+    const tableOrEmpty = room.patients.length ? `
+      <table class="grid-table">
+        <thead>
+          <tr>
+            <th class="num-col">#</th>
+            <th>Paciente</th>
+            <th class="risk-col">Classificação</th>
+            <th class="del-col"></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    ` : `<div class="room-empty">Nenhum paciente adicionado ainda.</div>`;
+
+    return `
+      <div class="room-card">
+        <div class="room-head">
+          <h2>${escapeHtml(room.name)}</h2>
+          <div class="doctor-field">
+            <label>Médico</label>
+            <input type="text" list="doctorList" placeholder="Nome do médico" value="${escapeAttr(room.doctor)}"
+              oninput="window.__setDoctor(${roomIdx}, this.value)">
+          </div>
+        </div>
+        <div class="room-body">
+          ${tableOrEmpty}
+          <button class="add-patient-btn" onclick="window.__addPatient(${roomIdx})">+ Adicionar paciente</button>
+          <div class="room-foot">
+            <span class="mini-total Azul"><span class="dot"></span>Azul ${counts.Azul}</span>
+            <span class="mini-total Verde"><span class="dot"></span>Verde ${counts.Verde}</span>
+            <span class="mini-total Amarelo"><span class="dot"></span>Amarelo ${counts.Amarelo}</span>
+            <span class="mini-total Laranja"><span class="dot"></span>Laranja ${counts.Laranja}</span>
+            <span class="mini-total geral">Total ${total}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRooms(){
+    roomsGrid.innerHTML = state.rooms.map((room, idx) => renderRoomCard(room, idx)).join('');
+  }
+
+  function renderPivot(){
+    const colTotals = {Azul:0, Verde:0, Amarelo:0, Laranja:0};
+    let grandTotal = 0;
+
+    const bodyRows = state.rooms.map(room => {
+      const counts = countRoom(room);
+      const rowTotal = RISKS.reduce((s,r) => s + counts[r], 0);
+      grandTotal += rowTotal;
+      RISKS.forEach(r => { colTotals[r] += counts[r]; });
+      const doctorLine = room.doctor ? `<span class="doctor-sub">${escapeHtml(room.doctor)}</span>` : '';
+      return `
+        <tr>
+          <td class="room-name">${escapeHtml(room.name)}${doctorLine}</td>
+          <td class="num">${counts.Azul}</td>
+          <td class="num">${counts.Verde}</td>
+          <td class="num">${counts.Amarelo}</td>
+          <td class="num">${counts.Laranja}</td>
+          <td class="total-col">${rowTotal}</td>
+        </tr>
+      `;
+    }).join('');
+
+    pivotHost.innerHTML = `
+      <table class="pivot">
+        <thead>
+          <tr>
+            <th>Consultório</th>
+            <th class="risk-col-Azul">Azul</th>
+            <th class="risk-col-Verde">Verde</th>
+            <th class="risk-col-Amarelo">Amarelo</th>
+            <th class="risk-col-Laranja">Laranja</th>
+            <th class="total-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot>
+          <tr>
+            <td>Total por classificação</td>
+            <td class="num">${colTotals.Azul}</td>
+            <td class="num">${colTotals.Verde}</td>
+            <td class="num">${colTotals.Amarelo}</td>
+            <td class="num">${colTotals.Laranja}</td>
+            <td class="total-col">${grandTotal}</td>
+          </tr>
+        </tfoot>
+      </table>
+    `;
+  }
+
+  function rerender(){
+    renderRooms();
+    renderPivot();
+    queueSave();
+  }
+
+  window.__setDoctor = function(roomIdx, value){
+    state.rooms[roomIdx].doctor = value;
+    // don't full re-render the input the user is typing in; just update pivot + queue save
+    renderPivot();
+    queueSave();
+  };
+
+  window.__addPatient = function(roomIdx){
+    const room = state.rooms[roomIdx];
+    const nextId = (room.patients.reduce((m,p) => Math.max(m,p.id), 0)) + 1;
+    room.patients.push({id: nextId, name: "", risk: null});
+    rerender();
+    // focus the new patient name input
+    requestAnimationFrame(() => {
+      const cards = document.querySelectorAll('.room-card');
+      const card = cards[roomIdx];
+      if(card){
+        const inputs = card.querySelectorAll('.patient-input');
+        const last = inputs[inputs.length - 1];
+        if(last) last.focus();
+      }
+    });
+  };
+
+  window.__removePatient = function(roomIdx, patientId){
+    const room = state.rooms[roomIdx];
+    room.patients = room.patients.filter(p => p.id !== patientId);
+    rerender();
+  };
+
+  window.__setPatientName = function(roomIdx, patientId, value){
+    const p = state.rooms[roomIdx].patients.find(p => p.id === patientId);
+    if(p) p.name = value;
+    queueSave();
+  };
+
+  window.__setRisk = function(roomIdx, patientId, risk){
+    const p = state.rooms[roomIdx].patients.find(p => p.id === patientId);
+    if(p) p.risk = risk;
+    renderRooms();
+    renderPivot();
+    queueSave();
+  };
+
+  loadState();
+})();
+</script>
+</body>
+</html>
