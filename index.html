@@ -260,16 +260,56 @@
 
   /* ---- print ---- */
   @media print{
-    body{ background:#fff; padding:0; }
+    @page{ size: landscape; margin: 8mm; }
+
+    html,body{ width:100%; height:100%; }
+    body{ background:#fff; padding:0; font-size:10px; }
+    .wrap{ max-width:none; }
+
     .head-actions, .add-patient-btn, .del-row-btn, footer.note{ display:none !important; }
-    .rooms-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+
+    header.app-head{ padding-bottom:6px; margin-bottom:8px; }
+    h1{ font-size:16px; }
+    .eyebrow{ font-size:8px; margin-bottom:2px; }
+
+    .meta-bar{ padding:6px 10px; margin-bottom:8px; gap:8px; grid-template-columns:1.4fr 1fr 1fr; }
+    .meta-bar label{ font-size:8px; margin-bottom:2px; }
+    .meta-bar input, .period-chip span{ padding:3px 6px; font-size:10px; }
+
+    .rooms-grid{ grid-template-columns:repeat(5, 1fr); gap:6px; margin-bottom:8px; }
     .room-card{ break-inside:avoid; border-color:#999; }
-    .room-head{ background:#eee !important; color:#111 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; }
-    .panel-flat, .meta-bar{ break-inside:avoid; }
-    table.pivot thead th{ background:#eee !important; color:#111 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .room-head{
+      background:#eee !important; color:#111 !important; padding:5px 7px;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact; flex-direction:column; align-items:flex-start; gap:4px;
+    }
+    .room-head h2{ font-size:10.5px; }
+    .doctor-field{ max-width:none; width:100%; }
+    .doctor-field label{ font-size:7.5px; }
+    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; font-size:9px; padding:2px 5px; }
+
+    .room-body{ padding:6px 7px 8px; }
+    table.grid-table{ font-size:9px; }
+    table.grid-table thead th{ padding:2px 3px; font-size:7.5px; }
+    table.grid-table tbody td{ padding:2px 3px; }
+    .patient-input{ padding:2px 4px; font-size:9px; }
     .risk-mini-options{ gap:2px; }
-    .risk-mini span{ width:22px; height:20px; border-color:#bbb; }
+    .risk-mini span{ width:16px; height:15px; border-color:#bbb; }
+
+    .room-foot{ margin-top:6px; padding-top:6px; gap:3px; }
+    .mini-total{ font-size:8px; padding:2px 6px; }
+
+    .panel-flat, .meta-bar{ break-inside:avoid; }
+    .totals-head{ padding:8px 12px 2px; }
+    .totals-head h2{ font-size:11px; margin-bottom:2px; }
+    .totals-head p{ display:none; }
+    table.pivot{ font-size:9.5px; }
+    table.pivot thead th{
+      background:#eee !important; color:#111 !important; padding:4px 12px; font-size:8px;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    table.pivot tbody td, table.pivot tfoot td{ padding:4px 12px; }
+    table.pivot tbody td.doctor-sub{ font-size:7.5px; }
+
     a[href]:after{ content:""; }
   }
 </style>
@@ -292,7 +332,7 @@
   <section class="meta-bar">
     <div>
       <label for="controladorInput">Controlador</label>
-      <input type="text" id="controladorInput" placeholder="Nome de quem está controlando" autocomplete="off">
+      <input type="text" id="controladorInput" list="controladorList" placeholder="Nome de quem está controlando" autocomplete="off">
     </div>
     <div>
       <label>Período</label>
@@ -322,6 +362,7 @@
 </div>
 
 <datalist id="doctorList"></datalist>
+<datalist id="controladorList"></datalist>
 
 <script>
 (function(){
@@ -331,8 +372,13 @@
 
   const DOCTORS = ["ABDEL HAFES","ALAN LUIS","ALEXANDRE ABREU","ALTINO NETO","AMANDA NEVES DE SOUZA","ANA CLARA FERREIRA","ANA CLAUDIA MELLO","ANA LAURA","ANALISE PAULA CONCEIÇÃO","ANIVALDO LUIS LEMES JUNIOR","ANTONIO ALMEIDA","ANTONIO CARLOS ROSA","ARIANE BORGES","BARBARA NAGANO","BEATRICE RAMOS","BEATRIZ BOIAGO","BIANCA DE SOUZA","BRUNO NOGUEIRA","CAMILA BORGES","CAMILA CRISTINA","CARIELI ALDANA","CARLA CEJANA","CARLOS MARTINS","CAROLINE BAZZANO","CAROLINE DARC","CLAUDIA QUADROS","COSMO ROCHA","CYRIACO RONDON","DANIEL GOMES DE ARAUJO","DANIEL PALOMARES","DANIELLE BARRANCO","DANIELLY LARISSA","DARIO SEBASTIAN MACIAS","DEBORA CURY GUTIERRES","DEBORA ROSSATO","DILSON MAURER","DOUGLAS MARQUES ZARATINI","EDMUNDO GARCIA","FABIANA COUTINHO","FELIPE IANDOLI","FERNANDA FERREIRA","FERNANDA NUNES","FERNANDO DE OLIVEIRA","FLAVIA MARQUES","FRANCIELLE CAROLINE","FRANCISCO CUBEL","GABRIEL BELFORT","GABRIEL YAMAKI","GABRIELA ANDRADE","GABRIELA HONORIO","GESSICA DE MACEDO","GILSON YUDI","GIOVANI JOAO","GIOVANNA LARSEN","GIOVANNI BOUCHABKI","HELOISA AMORIM","IGOR WANDERLEY","ISADORA BORGES DE BRITO","ISADORA LIMA","ISADORA MACEROU","JAMAL SALEM","JAN MIYASATO","JANAINA ROCHA","JÉSSICA ANDRADE","JESSICA FIGUEIRAS","JHENIFFER DE SOUZA","JOANA SARTORE PAGLIOSA","JOAO ROSA","JONAS MOENTKE","JORGE XAVIER MARTINS NETO","JOSÉ GUILHERME","JULIA CHROMINSKI","JULIANO DA SILVA SILVEIRA","JULIANO GOMES","JULIANO NETO","KELLY FURTADO","KELLY SCHNEIDER","KENIO OKAMURA","KESIA LACERDA","LARISSA BOAVENTURA","LENO VIANA","LETICIA TRAD","LUANA ARAUJO BREZOLIN","LUANA VARELA","LUANAYRA SILVA","LUCIA AREJANO","LUCIANA VIEIRA SA","LUIS  FELIPE","LUIS ANTONIO JR","MARCIO BOMFIM","MARCOS RONDON","MARIA","MARIA LETICIA","MARIANA PERES","MARINA MEDEIROS","MATEUS OLIVEIRA","MATHEUS EMBOAVA","MAYCON WAGATUMA","NATHALIA FERNANDES","PATRICIA PAMPURI","PAULO HENRIQUE BERGO","PEDRO BALDOMAR","PERIBIANO GODOI NETO","PRISCILA PASSOS","RAABE DE OLIVEIRA SANTANA FRANÇA","RAFAEL AYALA","RAFAEL ROCHA MILANI","RAFAELI CARDOSO","RAISSA ANDRADE","RAPHAEL NUNES","RAPHAEL SIMIOLI","RAUL BORGES","RAUL MEJIA","RAUL MOREIRA","RAYHANNE VICTORIA COSTA","REINALDO OSHIRO","RENATA BOABAID","RODRIGO FELICIANO","RODRIGO MUNARO","ROGERIO CAVALCANTE","ROGÉRIO GONÇALVES","Rogerio Jose Goncalves","RONIE VELOSO","ROSY DELGADILLO","ROSY E. D. MONTENEGRO","SARA KAISER","SOFIA TEIXEIRA GOMES","STEFERSSON VASQUE","TALYS EDUARDO","VICTOR MAURICIO PEREZ ROJAS","VICTOR YUKIO","VICTORIA TESTON","VINICIUS AKIO KOGA","VINICIUS INACIO UJACOV","VITOR MOREIRA","VIVIANE MORAES","WALTER VINICIUS","WILLIAM ASATO","YASMIN MONTEIRO"];
 
+  const CONTROLLERS = ["ADRIANO SOUZA","ADRIELE CRISANTO","ALESSANDRO GONCALVES","ALEXFRANCIS DIAS","ANA CAROLINA DA SILVA","ANA PAULA","ANDRE FELIPE","ANGELA FORTUNATO","ANGELA M. TEIXEIRA","BRUNIELEN DOS SANTOS","CLODOALDO ATAIDE","DARIENE BERTOLDO","DAYANE CRISTINA","EDUARDO OLIVEIRA LOPES","ELISANDRO SANTOS","EMERSON CABANHAS","EMILEIDE LUCINEIA","ERYK GARCIA","FATIMA BARBOSA","FLAVIA OGEDA","GABRIELE SANTOS","IDALINA DIAS","JEFFERSON LUIZ","JOAO PEDRO","JOSE ROBERTO","JULIANA ALVES","LEANDRO GONÇALVES DA SILVA","LUCAS GOMES","LUCIANA LIMA","LUCIANA VIEGAS","LUIS GUSTAVO DE ARRUDA LIMA","MARCOS RODRIGUES","MARYANNE CARDOSO","MÉRLIN GARCIA","NEILZA COSTA","RAPHAEL GOUVEIA","RHAYLLA SANCHES","RODRIGO RIBEIRO","SILGMAR DIAS","SIMONE BEZERRA","THIAGO CARNEIRO DE OLIVEIRA","VANESKA LEITE","VANESSA OLIVEIRA"];
+
   const doctorList = document.getElementById('doctorList');
   doctorList.innerHTML = DOCTORS.map(d => `<option value="${d}"></option>`).join('');
+
+  const controladorList = document.getElementById('controladorList');
+  controladorList.innerHTML = CONTROLLERS.map(c => `<option value="${c}"></option>`).join('');
 
   const roomsGrid = document.getElementById('roomsGrid');
   const pivotHost = document.getElementById('pivotHost');
