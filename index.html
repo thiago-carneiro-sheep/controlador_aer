@@ -179,6 +179,8 @@
   .risk-mini[data-r="Laranja"] input:checked ~ span{ border-color:var(--risco-laranja); background:var(--risco-laranja-bg); }
   .risk-mini[data-r="Laranja"] input:checked ~ span::after{ opacity:1; }
 
+  .risk-print-label{ display:none; }
+
   .del-row-btn{
     border:none; background:none; color:var(--muted); cursor:pointer;
     font-size:15px; line-height:1; padding:4px; border-radius:5px;
@@ -260,55 +262,70 @@
 
   /* ---- print ---- */
   @media print{
-    @page{ size: landscape; margin: 8mm; }
+    @page{ size: landscape; margin: 6mm; }
 
     html,body{ width:100%; height:100%; }
-    body{ background:#fff; padding:0; font-size:10px; }
+    body{ background:#fff; padding:0; font-size:9px; color:#111; }
     .wrap{ max-width:none; }
 
     .head-actions, .add-patient-btn, .del-row-btn, footer.note{ display:none !important; }
 
-    header.app-head{ padding-bottom:6px; margin-bottom:8px; }
-    h1{ font-size:16px; }
-    .eyebrow{ font-size:8px; margin-bottom:2px; }
+    header.app-head{ padding-bottom:4px; margin-bottom:5px; border-bottom-width:1px; }
+    h1{ font-size:14px; }
+    .eyebrow{ font-size:7.5px; margin-bottom:1px; }
 
-    .meta-bar{ padding:6px 10px; margin-bottom:8px; gap:8px; grid-template-columns:1.4fr 1fr 1fr; }
-    .meta-bar label{ font-size:8px; margin-bottom:2px; }
-    .meta-bar input, .period-chip span{ padding:3px 6px; font-size:10px; }
+    .meta-bar{ padding:4px 8px; margin-bottom:5px; gap:6px; grid-template-columns:1.4fr 1fr 1fr; border-color:#999; }
+    .meta-bar label{ font-size:7px; margin-bottom:1px; }
+    .meta-bar input, .period-chip span{ padding:2px 5px; font-size:9px; border-color:#999; }
 
-    .rooms-grid{ grid-template-columns:repeat(5, 1fr); gap:6px; margin-bottom:8px; }
+    .rooms-grid{ grid-template-columns:repeat(5, 1fr); gap:4px; margin-bottom:5px; }
     .room-card{ break-inside:avoid; border-color:#999; }
     .room-head{
-      background:#eee !important; color:#111 !important; padding:5px 7px;
-      -webkit-print-color-adjust:exact; print-color-adjust:exact; flex-direction:column; align-items:flex-start; gap:4px;
+      background:#eee !important; color:#111 !important; padding:3px 5px;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact; flex-direction:column; align-items:flex-start; gap:2px;
     }
-    .room-head h2{ font-size:10.5px; }
+    .room-head h2{ font-size:9px; }
     .doctor-field{ max-width:none; width:100%; }
-    .doctor-field label{ font-size:7.5px; }
-    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; font-size:9px; padding:2px 5px; }
+    .doctor-field label{ font-size:6.5px; margin-bottom:1px; }
+    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; font-size:8px; padding:1px 4px; }
 
-    .room-body{ padding:6px 7px 8px; }
-    table.grid-table{ font-size:9px; }
-    table.grid-table thead th{ padding:2px 3px; font-size:7.5px; }
-    table.grid-table tbody td{ padding:2px 3px; }
-    .patient-input{ padding:2px 4px; font-size:9px; }
-    .risk-mini-options{ gap:2px; }
-    .risk-mini span{ width:16px; height:15px; border-color:#bbb; }
+    .room-body{ padding:3px 4px 5px; }
 
-    .room-foot{ margin-top:6px; padding-top:6px; gap:3px; }
-    .mini-total{ font-size:8px; padding:2px 6px; }
+    table.grid-table{ font-size:7.5px; table-layout:fixed; width:100%; }
+    table.grid-table thead th{ padding:1px 2px; font-size:6.5px; }
+    table.grid-table thead th.num-col{ width:12px; }
+    table.grid-table thead th.risk-col{ width:auto; }
+    table.grid-table thead th.del-col{ display:none; }
+    table.grid-table tbody td{ padding:0.5px 2px; line-height:1.35; border-bottom-color:#e2ded0; }
+    table.grid-table tbody td:last-child{ display:none; }
+
+    .patient-input{
+      border:none !important; background:transparent !important; padding:0 !important;
+      font-size:7.5px; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      display:block; width:100%;
+    }
+    .risk-mini-options{ display:none !important; }
+    .risk-print-label{
+      display:inline-block; font-size:7px; font-weight:700; letter-spacing:.01em;
+      white-space:nowrap;
+    }
+
+    .room-foot{ margin-top:4px; padding-top:4px; gap:2px; border-color:#ccc; }
+    .mini-total{ font-size:6.5px; padding:1px 5px; background:none !important; border:1px solid #ccc; }
+    .mini-total .dot{ width:5px; height:5px; }
+    .mini-total.geral{ background:#eee !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
     .panel-flat, .meta-bar{ break-inside:avoid; }
-    .totals-head{ padding:8px 12px 2px; }
-    .totals-head h2{ font-size:11px; margin-bottom:2px; }
+    .totals-head{ padding:5px 10px 1px; }
+    .totals-head h2{ font-size:10px; margin-bottom:1px; }
     .totals-head p{ display:none; }
-    table.pivot{ font-size:9.5px; }
+    table.pivot{ font-size:8.5px; }
     table.pivot thead th{
-      background:#eee !important; color:#111 !important; padding:4px 12px; font-size:8px;
+      background:#eee !important; color:#111 !important; padding:3px 10px; font-size:7px;
       -webkit-print-color-adjust:exact; print-color-adjust:exact;
     }
-    table.pivot tbody td, table.pivot tfoot td{ padding:4px 12px; }
-    table.pivot tbody td.doctor-sub{ font-size:7.5px; }
+    table.pivot tbody td, table.pivot tfoot td{ padding:3px 10px; }
+    table.pivot tbody td.doctor-sub{ font-size:6.5px; }
 
     a[href]:after{ content:""; }
   }
@@ -437,15 +454,27 @@
   function queueSave(){
     saveHint.textContent = "Salvando…";
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(async () => {
-      try{
-        await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
-        saveHint.textContent = "Tudo salvo.";
-      }catch(e){
-        saveHint.textContent = "Não foi possível salvar agora.";
-      }
-    }, 250);
+    saveTimer = setTimeout(doSave, 250);
   }
+
+  async function doSave(){
+    clearTimeout(saveTimer);
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      saveHint.textContent = "Tudo salvo.";
+    }catch(e){
+      saveHint.textContent = "Não foi possível salvar agora.";
+    }
+  }
+
+  // Save immediately (no debounce) whenever a field loses focus, the tab is
+  // hidden, or the page is about to close — so nothing typed gets lost.
+  document.addEventListener('focusout', doSave);
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden) doSave();
+  });
+  window.addEventListener('pagehide', doSave);
+  window.addEventListener('beforeunload', doSave);
 
   controladorInput.addEventListener('input', () => {
     state.controlador = controladorInput.value;
@@ -511,9 +540,10 @@
         <td class="idx">${i+1}</td>
         <td>
           <input type="text" class="patient-input" placeholder="Nome do paciente" value="${escapeAttr(p.name)}"
-            oninput="window.__setPatientName(${roomIdx}, ${p.id}, this.value)">
+            oninput="window.__setPatientName(${roomIdx}, ${p.id}, this.value)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault(); window.__addPatient(${roomIdx});}">
         </td>
-        <td><div class="risk-mini-options">${riskMiniOptions(roomIdx, p.id, p.risk)}</div></td>
+        <td><div class="risk-mini-options">${riskMiniOptions(roomIdx, p.id, p.risk)}</div><span class="risk-print-label">${p.risk ? escapeHtml(p.risk.toUpperCase()) : ''}</span></td>
         <td><button class="del-row-btn" title="Remover" onclick="window.__removePatient(${roomIdx}, ${p.id})">×</button></td>
       </tr>
     `).join('');
