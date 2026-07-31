@@ -6,6 +6,7 @@
 <title>Controlador · Aero Rancho</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --ink:#16211f;
@@ -375,7 +376,7 @@
     <div id="pivotHost"></div>
   </section>
 
-  <footer class="note">Os dados ficam salvos automaticamente neste navegador.</footer>
+  <footer class="note">Os dados ficam salvos automaticamente neste navegador. <span id="versionTag">· v1.000</span></footer>
 </div>
 
 <datalist id="doctorList"></datalist>
@@ -386,6 +387,15 @@
   const RISKS = ["Azul","Verde","Amarelo","Laranja"];
   const ROOM_COUNT = 5;
   const STORAGE_KEY = "crs_aero_rancho_state";
+  const APP_VERSION = "1.000"; // bump this at every new version generated
+
+  // ---- Supabase (banco na nuvem, para sincronizar entre computadores) ----
+  // Preencha estes dois valores depois de criar seu projeto gratuito em
+  // https://supabase.com e rodar o supabase_schema.sql no SQL Editor.
+  // Deixe como está (vazio) para o app continuar funcionando só neste navegador.
+  const SUPABASE_URL = "https://bkzkxhowuemlqbmcihwg.supabase.co";        // ex: "https://xxxxxxxxxxxx.supabase.co"
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJremt4aG93dWVtbHFibWNpaHdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NTEyNzcsImV4cCI6MjEwMTAyNzI3N30.0L6sNfZRRUP_MlZtTJl-G7D0UfoWX5wGFH1SzY8DOW4";   // ex: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."
+  const SYNC_POLL_MS = 5000; // intervalo para buscar atualizações de outros computadores
 
   const DOCTORS = ["ABDEL HAFES","ALAN LUIS","ALEXANDRE ABREU","ALTINO NETO","AMANDA NEVES DE SOUZA","ANA CLARA FERREIRA","ANA CLAUDIA MELLO","ANA LAURA","ANALISE PAULA CONCEIÇÃO","ANIVALDO LUIS LEMES JUNIOR","ANTONIO ALMEIDA","ANTONIO CARLOS ROSA","ARIANE BORGES","BARBARA NAGANO","BEATRICE RAMOS","BEATRIZ BOIAGO","BIANCA DE SOUZA","BRUNO NOGUEIRA","CAMILA BORGES","CAMILA CRISTINA","CARIELI ALDANA","CARLA CEJANA","CARLOS MARTINS","CAROLINE BAZZANO","CAROLINE DARC","CLAUDIA QUADROS","COSMO ROCHA","CYRIACO RONDON","DANIEL GOMES DE ARAUJO","DANIEL PALOMARES","DANIELLE BARRANCO","DANIELLY LARISSA","DARIO SEBASTIAN MACIAS","DEBORA CURY GUTIERRES","DEBORA ROSSATO","DILSON MAURER","DOUGLAS MARQUES ZARATINI","EDMUNDO GARCIA","FABIANA COUTINHO","FELIPE IANDOLI","FERNANDA FERREIRA","FERNANDA NUNES","FERNANDO DE OLIVEIRA","FLAVIA MARQUES","FRANCIELLE CAROLINE","FRANCISCO CUBEL","GABRIEL BELFORT","GABRIEL YAMAKI","GABRIELA ANDRADE","GABRIELA HONORIO","GESSICA DE MACEDO","GILSON YUDI","GIOVANI JOAO","GIOVANNA LARSEN","GIOVANNI BOUCHABKI","HELOISA AMORIM","IGOR WANDERLEY","ISADORA BORGES DE BRITO","ISADORA LIMA","ISADORA MACEROU","JAMAL SALEM","JAN MIYASATO","JANAINA ROCHA","JÉSSICA ANDRADE","JESSICA FIGUEIRAS","JHENIFFER DE SOUZA","JOANA SARTORE PAGLIOSA","JOAO ROSA","JONAS MOENTKE","JORGE XAVIER MARTINS NETO","JOSÉ GUILHERME","JULIA CHROMINSKI","JULIANO DA SILVA SILVEIRA","JULIANO GOMES","JULIANO NETO","KELLY FURTADO","KELLY SCHNEIDER","KENIO OKAMURA","KESIA LACERDA","LARISSA BOAVENTURA","LENO VIANA","LETICIA TRAD","LUANA ARAUJO BREZOLIN","LUANA VARELA","LUANAYRA SILVA","LUCIA AREJANO","LUCIANA VIEIRA SA","LUIS  FELIPE","LUIS ANTONIO JR","MARCIO BOMFIM","MARCOS RONDON","MARIA","MARIA LETICIA","MARIANA PERES","MARINA MEDEIROS","MATEUS OLIVEIRA","MATHEUS EMBOAVA","MAYCON WAGATUMA","NATHALIA FERNANDES","PATRICIA PAMPURI","PAULO HENRIQUE BERGO","PEDRO BALDOMAR","PERIBIANO GODOI NETO","PRISCILA PASSOS","RAABE DE OLIVEIRA SANTANA FRANÇA","RAFAEL AYALA","RAFAEL ROCHA MILANI","RAFAELI CARDOSO","RAISSA ANDRADE","RAPHAEL NUNES","RAPHAEL SIMIOLI","RAUL BORGES","RAUL MEJIA","RAUL MOREIRA","RAYHANNE VICTORIA COSTA","REINALDO OSHIRO","RENATA BOABAID","RODRIGO FELICIANO","RODRIGO MUNARO","ROGERIO CAVALCANTE","ROGÉRIO GONÇALVES","Rogerio Jose Goncalves","RONIE VELOSO","ROSY DELGADILLO","ROSY E. D. MONTENEGRO","SARA KAISER","SOFIA TEIXEIRA GOMES","STEFERSSON VASQUE","TALYS EDUARDO","VICTOR MAURICIO PEREZ ROJAS","VICTOR YUKIO","VICTORIA TESTON","VINICIUS AKIO KOGA","VINICIUS INACIO UJACOV","VITOR MOREIRA","VIVIANE MORAES","WALTER VINICIUS","WILLIAM ASATO","YASMIN MONTEIRO"];
 
@@ -423,16 +433,108 @@
   }
   function escapeAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
 
+  // Storage layer, in priority order:
+  // 1) Supabase (real database, syncs across any computer) — used when
+  //    SUPABASE_URL/SUPABASE_ANON_KEY above are filled in.
+  // 2) Claude's persistent storage — used automatically when this runs as
+  //    an artifact inside the chat and Supabase isn't configured.
+  // 3) The browser's own localStorage — last resort, only saves on this
+  //    one browser/computer.
+  const isSupabaseConfigured = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 20;
+  const supabaseClient = (isSupabaseConfigured && window.supabase)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  const hasCloudStorage = (typeof window.storage !== 'undefined') && window.storage && typeof window.storage.get === 'function';
+
+  let lastKnownUpdatedAt = null; // used to detect changes made from other computers
+
+  async function storageGet(key){
+    if(supabaseClient){
+      const { data, error } = await supabaseClient
+        .from('board').select('state, updated_at').eq('id', key).maybeSingle();
+      if(error) throw error;
+      if(!data) return null;
+      lastKnownUpdatedAt = data.updated_at;
+      return JSON.stringify(data.state);
+    }
+    if(hasCloudStorage){
+      try{
+        const res = await window.storage.get(key, false);
+        return res ? res.value : null;
+      }catch(e){
+        return null;
+      }
+    }
+    try{
+      return window.localStorage.getItem(key);
+    }catch(e){
+      return null;
+    }
+  }
+
+  async function storageSet(key, value){
+    if(supabaseClient){
+      const nowIso = new Date().toISOString();
+      const { error } = await supabaseClient
+        .from('board')
+        .upsert({ id: key, state: JSON.parse(value), updated_at: nowIso });
+      if(error) throw error;
+      lastKnownUpdatedAt = nowIso;
+      return;
+    }
+    if(hasCloudStorage){
+      const res = await window.storage.set(key, value, false);
+      if(!res) throw new Error('storage.set returned no result');
+      return;
+    }
+    window.localStorage.setItem(key, value);
+  }
+
+  function storageModeLabel(){
+    if(supabaseClient) return "Supabase (sincronizado entre computadores)";
+    if(hasCloudStorage) return "memória do Claude";
+    return "este navegador";
+  }
+
+  // Polls Supabase for changes made from other computers and refreshes the
+  // screen automatically, without interrupting whatever the person is
+  // currently typing.
+  function startSyncPolling(){
+    if(!supabaseClient) return;
+    setInterval(async () => {
+      const active = document.activeElement;
+      const isTyping = active && (active.tagName === 'INPUT');
+      if(isTyping) return; // don't yank the board while someone is mid-keystroke
+
+      try{
+        const { data, error } = await supabaseClient
+          .from('board').select('state, updated_at').eq('id', STORAGE_KEY).maybeSingle();
+        if(error || !data) return;
+        if(data.updated_at !== lastKnownUpdatedAt){
+          lastKnownUpdatedAt = data.updated_at;
+          state = data.state;
+          controladorInput.value = state.controlador || "";
+          dataInput.value = state.data || "";
+          document.querySelectorAll('input[name="periodo"]').forEach(r => { r.checked = (r.value === state.periodo); });
+          renderRooms();
+          renderPivot();
+          saveHint.textContent = "Atualizado por outro computador.";
+        }
+      }catch(e){ /* silent — try again next tick */ }
+    }, SYNC_POLL_MS);
+  }
+
   async function loadState(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, false);
-      if(res && res.value){
-        const loaded = JSON.parse(res.value);
+      const raw = await storageGet(STORAGE_KEY);
+      if(raw){
+        const loaded = JSON.parse(raw);
         if(loaded && Array.isArray(loaded.rooms) && loaded.rooms.length === ROOM_COUNT){
           state = loaded;
         }
       }
-    }catch(e){ /* nothing saved yet */ }
+    }catch(e){ /* nothing saved yet, or storage unavailable */ }
 
     if(!state.data){
       const now = new Date();
@@ -448,7 +550,8 @@
 
     renderRooms();
     renderPivot();
-    saveHint.textContent = "Dados salvos automaticamente neste navegador.";
+    saveHint.textContent = "Salvo automaticamente · " + storageModeLabel() + ".";
+    startSyncPolling();
   }
 
   function queueSave(){
@@ -460,7 +563,7 @@
   async function doSave(){
     clearTimeout(saveTimer);
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      await storageSet(STORAGE_KEY, JSON.stringify(state));
       saveHint.textContent = "Tudo salvo.";
     }catch(e){
       saveHint.textContent = "Não foi possível salvar agora.";
@@ -692,6 +795,9 @@
     renderPivot();
     queueSave();
   };
+
+  const versionTagEl = document.getElementById('versionTag');
+  if(versionTagEl) versionTagEl.textContent = "· v" + APP_VERSION;
 
   loadState();
 })();
