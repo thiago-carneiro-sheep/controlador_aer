@@ -181,6 +181,7 @@
   .risk-mini[data-r="Laranja"] input:checked ~ span::after{ opacity:1; }
 
   .risk-print-label{ display:none; }
+  table.print-grid{ display:none; }
 
   .del-row-btn{
     border:none; background:none; color:var(--muted); cursor:pointer;
@@ -250,7 +251,7 @@
   table.pivot tbody tr:last-child td{ border-bottom:none; }
   table.pivot tbody td.num{ font-variant-numeric:tabular-nums; font-weight:600; text-align:center; }
   table.pivot tbody td.room-name{ font-weight:600; }
-  table.pivot tbody td.doctor-sub{ display:block; font-weight:400; font-size:11.5px; color:var(--muted); margin-top:2px; }
+  table.pivot tbody td.room-name .doctor-sub{ display:inline-block; font-weight:400; font-size:11.5px; color:var(--muted); margin-left:8px; }
   table.pivot tbody td.total-col{ background:#f0efe6; font-weight:700; text-align:center; }
   table.pivot tfoot td{
     padding:12px 22px; font-weight:700; border-top:2px solid var(--ink);
@@ -271,62 +272,63 @@
 
     .head-actions, .add-patient-btn, .del-row-btn, footer.note{ display:none !important; }
 
-    header.app-head{ padding-bottom:4px; margin-bottom:5px; border-bottom-width:1px; }
-    h1{ font-size:14px; }
-    .eyebrow{ font-size:7.5px; margin-bottom:1px; }
+    header.app-head{ padding-bottom:3px; margin-bottom:3px; border-bottom-width:1px; }
+    h1{ font-size:12px; }
+    .eyebrow{ font-size:7px; margin-bottom:0; }
 
-    .meta-bar{ padding:4px 8px; margin-bottom:5px; gap:6px; grid-template-columns:1.4fr 1fr 1fr; border-color:#999; }
-    .meta-bar label{ font-size:7px; margin-bottom:1px; }
-    .meta-bar input, .period-chip span{ padding:2px 5px; font-size:9px; border-color:#999; }
+    .meta-bar{ padding:3px 7px; margin-bottom:3px; gap:6px; grid-template-columns:1.4fr 1fr 1fr; border-color:#999; }
+    .meta-bar label{ font-size:6.5px; margin-bottom:0; }
+    .meta-bar input, .period-chip span{ padding:1px 4px; font-size:8px; border-color:#999; }
 
-    .rooms-grid{ grid-template-columns:repeat(5, 1fr); gap:4px; margin-bottom:5px; }
+    .rooms-grid{ grid-template-columns:repeat(5, 1fr); gap:4px; margin-bottom:3px; }
     .room-card{ break-inside:avoid; border-color:#999; }
     .room-head{
-      background:#eee !important; color:#111 !important; padding:3px 5px;
-      -webkit-print-color-adjust:exact; print-color-adjust:exact; flex-direction:column; align-items:flex-start; gap:2px;
+      background:#eee !important; color:#111 !important; padding:2px 4px;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact; flex-direction:column; align-items:flex-start; gap:1px;
     }
-    .room-head h2{ font-size:9px; }
+    .room-head h2{ font-size:8px; }
     .doctor-field{ max-width:none; width:100%; }
-    .doctor-field label{ font-size:6.5px; margin-bottom:1px; }
-    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; font-size:8px; padding:1px 4px; }
+    .doctor-field label{ font-size:6px; margin-bottom:0; }
+    .doctor-field input{ background:#fff !important; border-color:#999 !important; color:#111 !important; font-size:7px; padding:0.5px 3px; }
 
-    .room-body{ padding:3px 4px 5px; }
+    .room-body{ padding:2px 3px 3px; }
 
-    table.grid-table{ font-size:7.5px; table-layout:fixed; width:100%; }
-    table.grid-table thead th{ padding:1px 2px; font-size:6.5px; }
-    table.grid-table thead th.num-col{ width:12px; }
-    table.grid-table thead th.risk-col{ width:auto; }
-    table.grid-table thead th.del-col{ display:none; }
-    table.grid-table tbody td{ padding:0.5px 2px; line-height:1.35; border-bottom-color:#e2ded0; }
-    table.grid-table tbody td:last-child{ display:none; }
+    table.grid-table{ display:none !important; }
 
-    .patient-input{
-      border:none !important; background:transparent !important; padding:0 !important;
-      font-size:7.5px; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      display:block; width:100%;
+    table.print-grid{
+      display:table !important; width:100%; table-layout:fixed; border-collapse:collapse;
+      font-family:Calibri,'Segoe UI',Arial,sans-serif; color:#111;
     }
-    .risk-mini-options{ display:none !important; }
-    .risk-print-label{
-      display:inline-block; font-size:7px; font-weight:700; letter-spacing:.01em;
-      white-space:nowrap;
+    table.print-grid thead th{
+      text-align:left; font-size:5px; font-weight:600; color:#555;
+      padding:0; height:7px; line-height:7px; border-bottom:0.5px solid #999;
     }
+    table.print-grid thead th.pidx{ width:9px; }
+    table.print-grid thead th.prisk{ width:24px; }
+    table.print-grid tbody td{
+      font-size:7px; padding:0; height:8px; line-height:8px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      border-bottom:0.5px solid #eee;
+    }
+    table.print-grid tbody td.pidx{ color:#777; font-size:5.5px; }
+    table.print-grid tbody td.prisk{ font-weight:700; font-size:5.5px; }
 
-    .room-foot{ margin-top:4px; padding-top:4px; gap:2px; border-color:#ccc; }
-    .mini-total{ font-size:6.5px; padding:1px 5px; background:none !important; border:1px solid #ccc; }
-    .mini-total .dot{ width:5px; height:5px; }
+    .room-foot{ margin-top:2px; padding-top:2px; gap:2px; border-color:#ccc; }
+    .mini-total{ font-size:5.5px; padding:0.5px 4px; background:none !important; border:1px solid #ccc; }
+    .mini-total .dot{ width:4px; height:4px; }
     .mini-total.geral{ background:#eee !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
     .panel-flat, .meta-bar{ break-inside:avoid; }
-    .totals-head{ padding:5px 10px 1px; }
-    .totals-head h2{ font-size:10px; margin-bottom:1px; }
+    .totals-head{ padding:3px 8px 0; }
+    .totals-head h2{ font-size:8.5px; margin-bottom:0; }
     .totals-head p{ display:none; }
-    table.pivot{ font-size:8.5px; }
+    table.pivot{ font-size:7px; }
     table.pivot thead th{
-      background:#eee !important; color:#111 !important; padding:3px 10px; font-size:7px;
+      background:#eee !important; color:#111 !important; padding:2px 8px; font-size:6px;
       -webkit-print-color-adjust:exact; print-color-adjust:exact;
     }
-    table.pivot tbody td, table.pivot tfoot td{ padding:3px 10px; }
-    table.pivot tbody td.doctor-sub{ font-size:6.5px; }
+    table.pivot tbody td, table.pivot tfoot td{ padding:1.5px 8px; }
+    table.pivot tbody td.room-name .doctor-sub{ font-size:6.5px; margin-left:5px; }
 
     a[href]:after{ content:""; }
   }
@@ -387,7 +389,7 @@
   const RISKS = ["Azul","Verde","Amarelo","Laranja"];
   const ROOM_COUNT = 5;
   const STORAGE_KEY = "crs_aero_rancho_state";
-  const APP_VERSION = "1.001"; // bump this at every new version generated
+  const APP_VERSION = "1.005"; // bump this at every new version generated
 
   // ---- Supabase (banco na nuvem, para sincronizar entre computadores) ----
   // Preencha estes dois valores depois de criar seu projeto gratuito em
@@ -654,6 +656,14 @@
     const counts = countRoom(room);
     const total = counts.Azul + counts.Verde + counts.Amarelo + counts.Laranja;
 
+    const printRows = room.patients.map((p, i) => `
+      <tr>
+        <td class="pidx">${i+1}</td>
+        <td class="pname">${escapeHtml(p.name)}</td>
+        <td class="prisk">${p.risk ? escapeHtml(p.risk.toUpperCase()) : ''}</td>
+      </tr>
+    `).join('');
+
     const tableOrEmpty = room.patients.length ? `
       <table class="grid-table">
         <thead>
@@ -665,6 +675,12 @@
           </tr>
         </thead>
         <tbody>${rows}</tbody>
+      </table>
+      <table class="print-grid">
+        <thead>
+          <tr><th class="pidx">#</th><th class="pname">Paciente</th><th class="prisk">Class.</th></tr>
+        </thead>
+        <tbody>${printRows}</tbody>
       </table>
     ` : `<div class="room-empty">Nenhum paciente adicionado ainda.</div>`;
 
@@ -706,7 +722,7 @@
       const rowTotal = RISKS.reduce((s,r) => s + counts[r], 0);
       grandTotal += rowTotal;
       RISKS.forEach(r => { colTotals[r] += counts[r]; });
-      const doctorLine = room.doctor ? `<span class="doctor-sub">${escapeHtml(room.doctor)}</span>` : '';
+      const doctorLine = room.doctor ? `<span class="doctor-sub">— ${escapeHtml(room.doctor)}</span>` : '';
       return `
         <tr>
           <td class="room-name">${escapeHtml(room.name)}${doctorLine}</td>
