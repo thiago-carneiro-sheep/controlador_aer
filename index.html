@@ -388,8 +388,14 @@
 (function(){
   const RISKS = ["Azul","Verde","Amarelo","Laranja"];
   const ROOM_COUNT = 5;
-  const STORAGE_KEY = "crs_aero_rancho_state";
-  const APP_VERSION = "1.005"; // bump this at every new version generated
+  const STORAGE_KEY_PREFIX = "crs_aero_rancho_state";
+  const APP_VERSION = "1.006"; // bump this at every new version generated
+
+  // Each day gets its own saved board — switching the "Data" field loads
+  // (or starts a fresh) board for that date, keeping a running history.
+  function boardKeyFor(date){
+    return STORAGE_KEY_PREFIX + "_" + (date && date.trim() ? date.trim() : "sem-data");
+  }
 
   // ---- Supabase (banco na nuvem, para sincronizar entre computadores) ----
   // Preencha estes dois valores depois de criar seu projeto gratuito em
@@ -501,7 +507,7 @@
 
   // Polls Supabase for changes made from other computers and refreshes the
   // screen automatically, without interrupting whatever the person is
-  // currently typing.
+  // currently typing. Always follows whichever date is selected right now.
   function startSyncPolling(){
     if(!supabaseClient) return;
     setInterval(async () => {
@@ -510,8 +516,9 @@
       if(isTyping) return; // don't yank the board while someone is mid-keystroke
 
       try{
+        const key = boardKeyFor(state.data);
         const { data, error } = await supabaseClient
-          .from('board').select('state, updated_at').eq('id', STORAGE_KEY).maybeSingle();
+          .from('board').select('state, updated_at').eq('id', key).maybeSingle();
         if(error || !data) return;
         if(data.updated_at !== lastKnownUpdatedAt){
           lastKnownUpdatedAt = data.updated_at;
@@ -527,28 +534,45 @@
     }, SYNC_POLL_MS);
   }
 
-  async function loadState(){
+  function blankBoard(date){
+    return {
+      controlador: "",
+      periodo: "",
+      data: date,
+      rooms: Array.from({length: ROOM_COUNT}, (_, i) => ({
+        name: "Consultório " + String(i+1).padStart(2,'0'),
+        doctor: "",
+        patients: []
+      }))
+    };
+  }
+
+  // Loads the saved board for a given date, or starts a blank one if that
+  // date has never been used before — this is what gives each day its own
+  // history instead of one board being overwritten forever.
+  async function loadBoardForDate(date){
+    let loaded = null;
     try{
-      const raw = await storageGet(STORAGE_KEY);
+      const raw = await storageGet(boardKeyFor(date));
       if(raw){
-        const loaded = JSON.parse(raw);
-        if(loaded && Array.isArray(loaded.rooms) && loaded.rooms.length === ROOM_COUNT){
-          state = loaded;
+        const parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.rooms) && parsed.rooms.length === ROOM_COUNT){
+          loaded = parsed;
         }
       }
-    }catch(e){ /* nothing saved yet, or storage unavailable */ }
+    }catch(e){ /* nothing saved for this date yet */ }
 
-    if(!state.data){
-      const now = new Date();
-      state.data = now.toISOString().slice(0,10);
-    }
+    state = loaded || blankBoard(date);
+    state.data = date;
+  }
+
+  async function loadState(){
+    const today = new Date().toISOString().slice(0,10);
+    await loadBoardForDate(state.data || today);
 
     controladorInput.value = state.controlador || "";
     dataInput.value = state.data || "";
-    if(state.periodo){
-      const r = document.querySelector(`input[name="periodo"][value="${state.periodo}"]`);
-      if(r) r.checked = true;
-    }
+    document.querySelectorAll('input[name="periodo"]').forEach(r => { r.checked = (r.value === state.periodo); });
 
     renderRooms();
     renderPivot();
@@ -565,11 +589,17 @@
   async function doSave(){
     clearTimeout(saveTimer);
     try{
-      await storageSet(STORAGE_KEY, JSON.stringify(state));
-      saveHint.textContent = "Tudo salvo.";
+      await storageSet(boardKeyFor(state.data), JSON.stringify(state));
+      saveHint.textContent = "Tudo salvo · " + formatDateLabel(state.data) + ".";
     }catch(e){
       saveHint.textContent = "Não foi possível salvar agora.";
     }
+  }
+
+  function formatDateLabel(iso){
+    if(!iso) return "";
+    const [y,m,d] = iso.split('-');
+    return (d && m && y) ? `${d}/${m}/${y}` : iso;
   }
 
   // Save immediately (no debounce) whenever a field loses focus, the tab is
@@ -585,10 +615,25 @@
     state.controlador = controladorInput.value;
     queueSave();
   });
-  dataInput.addEventListener('change', () => {
-    state.data = dataInput.value;
-    queueSave();
+
+  // Switching the date saves the board you were just on, then loads (or
+  // starts blank) the board for the newly selected date.
+  dataInput.addEventListener('change', async () => {
+    const newDate = dataInput.value;
+    if(!newDate || newDate === state.data) return;
+
+    await doSave(); // flush the outgoing date's board before switching
+
+    await loadBoardForDate(newDate);
+
+    controladorInput.value = state.controlador || "";
+    document.querySelectorAll('input[name="periodo"]').forEach(r => { r.checked = (r.value === state.periodo); });
+
+    renderRooms();
+    renderPivot();
+    saveHint.textContent = "Quadro de " + formatDateLabel(newDate) + " · " + storageModeLabel() + ".";
   });
+
   document.querySelectorAll('input[name="periodo"]').forEach(r => {
     r.addEventListener('change', () => {
       state.periodo = r.value;
@@ -601,21 +646,11 @@
   });
 
   document.getElementById('clearBtn').addEventListener('click', () => {
-    if(!confirm("Isso vai apagar o controlador, período, data e todos os pacientes lançados nas 5 salas. Deseja continuar?")) return;
+    if(!confirm("Isso vai apagar o controlador, período e todos os pacientes lançados nas 5 salas para o dia " + formatDateLabel(state.data) + ". Deseja continuar?")) return;
 
-    state = {
-      controlador: "",
-      periodo: "",
-      data: new Date().toISOString().slice(0,10),
-      rooms: Array.from({length: ROOM_COUNT}, (_, i) => ({
-        name: "Consultório " + String(i+1).padStart(2,'0'),
-        doctor: "",
-        patients: []
-      }))
-    };
+    state = blankBoard(state.data);
 
     controladorInput.value = "";
-    dataInput.value = state.data;
     document.querySelectorAll('input[name="periodo"]').forEach(r => r.checked = false);
 
     renderRooms();
